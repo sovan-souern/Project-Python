@@ -12,6 +12,9 @@ os.system("reboot")            # For Linux
 # # restart their Windows machine using Python commands.
 # import os
 # import platform
+# restart their Windows machine using Python commands.
+# import os
+# import platform
 
 # def restart_computer():
 #     # Check the operating system
