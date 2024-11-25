@@ -4,10 +4,7 @@ import shutil
 import speedtest
 import subprocess
 import platform
-
-import subprocess
-import psutil
-import platform
+import socket
 import os
 import openpyxl
 from openpyxl.styles import Alignment, PatternFill, Font
@@ -214,6 +211,17 @@ def get_memory_info():
     }
     return memory_info
 
+import socket
+
+
+def get_local_ip():
+    hostname = socket.gethostname()
+    local_ip = socket.gethostbyname(hostname)
+    return local_ip
+
+local_ip = get_local_ip()
+print("Local IP Address:",local_ip)
+
 def get_disk_info():
     # Get disk usage information
     disk_usage = psutil.disk_usage('/')
@@ -264,6 +272,43 @@ except subprocess.CalledProcessError:
 # Cleanup Functions
 # ------------------------------
 
+import psutil
+import time
+
+# Function to get battery status
+def get_battery_status():
+    battery = psutil.sensors_battery()
+    if battery:
+        percent = battery.percent
+        charging = battery.power_plugged
+        return f"Battery: {percent}% {'(Charging)' if charging else '(Not Charging)'}"
+    else:
+        return "Battery information not available"
+
+
+
+# Function to get the number of processes running
+def get_process_count():
+    process_count = len(psutil.pids())  # Get the list of process IDs
+    return f"Number of processes: {process_count}"
+
+# Function to get system uptime
+def get_system_uptime():
+    uptime_seconds = time.time() - psutil.boot_time()
+    uptime_hours = uptime_seconds // 3600
+    uptime_minutes = (uptime_seconds % 3600) // 60
+    uptime = f"{int(uptime_hours)} hours and {int(uptime_minutes)} minutes"
+    return f"System Uptime: {uptime}"
+
+# Example usage:
+battery_status = get_battery_status()
+process_count = get_process_count()
+system_uptime = get_system_uptime()
+
+# Display the information
+print(battery_status)
+print(process_count)
+print(system_uptime)
 
 
 
