@@ -274,9 +274,9 @@ def create_full_interface():
     ttk.Button(sidebar, text="Wi-Fi Credentials", command=lambda: show_wifi_passwords(info_label)).pack(fill=tk.X, pady=5)
     ttk.Button(sidebar, text="Wi-Fi Speed Test", command=check_wifi_speed).pack(fill=tk.X, pady=5)
     ttk.Button(sidebar, text="System Info", command=lambda: show_system_info(info_label)).pack(fill=tk.X, pady=5)
-    ttk.Button(sidebar, text="CPU Info", command=lambda: show_cpu_info(info_label)).pack(fill=tk.X, pady=5)
-    ttk.Button(sidebar, text="Memory Info", command=lambda: show_memory_info(info_label)).pack(fill=tk.X, pady=5)
-    ttk.Button(sidebar, text="Disk Info", command=lambda: show_disk_info(info_label)).pack(fill=tk.X, pady=5)
+    ttk.Button(sidebar, text="CPU Info", command=lambda: get_cpu_info(info_label)).pack(fill=tk.X, pady=5)
+    ttk.Button(sidebar, text="Memory Info", command=lambda: get_memory_info(info_label)).pack(fill=tk.X, pady=5)
+    ttk.Button(sidebar, text="Disk Info", command=lambda: get_disk_info(info_label)).pack(fill=tk.X, pady=5)
     ttk.Button(sidebar, text="Cleanup", command=cleanup_temp_files).pack(fill=tk.X, pady=5)
 
     main_frame = ttk.Frame(root, padding=10)
