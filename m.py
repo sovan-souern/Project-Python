@@ -5,25 +5,23 @@ from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import speedtest
-import subprocess
-import os
-import tkinter.messagebox as messagebox
-import os
-import psutil
-import shutil
-import speedtest
-import subprocess
-import platform
 import socket
 import os
+import shutil
+from datetime import datetime, timedelta
+import tkinter.messagebox as messagebox
+import speedtest
+import subprocess
 import openpyxl
 from openpyxl.styles import Alignment, PatternFill, Font
 from openpyxl import load_workbook
 
+
+# Function to get the serial number
 def get_serial_number():
     try:
         result = subprocess.check_output("wmic bios get serialnumber", shell=True).decode().strip().split("\n")
-        return result[1] if len(result) > 1 else "No Serial Number Found"
+        return result[1].strip() if len(result) > 1 else "No Serial Number Found"
     except Exception as e:
         return f"Error: {e}"
 
@@ -58,7 +56,7 @@ def get_username():
 def get_system_remark():
     try:
         result = subprocess.check_output("wmic computersystem get description", shell=True).decode().strip().split("\n")
-        return result[1] if len(result) > 1 else "No Description Found"
+        return result[1].strip() if len(result) > 1 else "No Description Found"
     except Exception as e:
         return f"Error: {e}"
 
@@ -113,6 +111,14 @@ def export_to_excel(data, filename="window.xlsx"):
                 cell.font = header_font
                 cell.alignment = Alignment(horizontal="center")
 
+        # Check if the data already exists (match based on "Username" and "Serial Number")
+        for row in range(2, sheet.max_row + 1):  # Start from row 2 to skip the header
+            username_cell = sheet.cell(row=row, column=3).value
+            serial_number_cell = sheet.cell(row=row, column=4).value
+            if username_cell == data["Username"] and serial_number_cell == data["Serial Number"]:
+                print("Data already exists in the Excel file. No changes made.")
+                return
+
         # Find the next empty row
         next_row = sheet.max_row + 1
 
@@ -143,22 +149,59 @@ export_to_excel(data)
 
 
 
-# Fetch system information
 def fetch_system_info():
+    pc_name = socket.gethostname()
+    ip_address = socket.gethostbyname(pc_name)
+    username = os.getlogin()
     """Fetch and display basic system information."""
     info = [
         f"OS: {platform.system()} {platform.release()}",
         f"Architecture: {platform.architecture()[0]}",
         f"Processor: {platform.processor()}",
-        f"RAM: {round(psutil.virtual_memory().total / (1024 ** 3), 2)} GB",
-        f"Disk: {round(psutil.disk_usage('/').total / (1024 ** 3), 2)} GB",
-    ]
+        f"Divide name: {platform.node()}",
+        f"Version: {platform.version()}",
+        f"Release: {platform.release()}",  
+        f"System Model: {platform.machine()}",
+        f"IP Address: {ip_address}",
+        f"Username: {username}",
+                ]
     return "\n".join(info)
 
-def cleanup_temp_files():
-    """Placeholder for cleaning up temporary files."""
-    print("Cleanup functionality triggered!")
-    messagebox.showinfo("Cleanup", "Temporary files cleaned successfully!")
+def clean_temp_files():
+    """Clean temporary files from system temp directories."""
+    # Get the temp directories
+    temp_dirs = [os.environ.get('TEMP'), os.environ.get('TMP')]
+    # Loop over temp directories and remove files
+    for temp_dir in temp_dirs:
+        if temp_dir and os.path.exists(temp_dir):
+            for filename in os.listdir(temp_dir):
+                file_path = os.path.join(temp_dir, filename)
+                try:
+                    if os.path.isfile(file_path):
+                        os.remove(file_path) 
+                    elif os.path.isdir(file_path):
+                        shutil.rmtree(file_path)  
+                except Exception as e:
+                    print(f"Failed to remove {file_path}: {e}")
+
+def empty_recycle_bin():
+    """Clear the Recycle Bin using PowerShell command (Windows only)."""
+    try:
+        # Run the PowerShell command to empty the Recycle Bin
+        subprocess.run('PowerShell.exe -Command "Clear-RecycleBin -Force"', shell=True, check=True)
+        print("Recycle Bin cleaned.")
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to clear Recycle Bin: {e}")
+
+def main():
+    """Main function to run cleaning tasks."""
+    print("Cleaning temporary files and Recycle Bin...")
+    clean_temp_files()
+    empty_recycle_bin()
+
+# Corrected the if condition to check for '__main__'
+if __name__ == "__main__":
+    main()
 
 def show_system_info(info_label):
     """Update the info section with system details."""
@@ -244,8 +287,10 @@ def get_cpu_info(info_label):
     cpu_count = psutil.cpu_count(logical=True)
     cpu_freq = psutil.cpu_freq()
     cpu_percent = psutil.cpu_percent(interval=1)
-    cpu_info = f"CPU Count (Logical Cores): {cpu_count}\nCPU Frequency: {cpu_freq.current} MHz\nCPU Usage: {cpu_percent}%"
+    processor_info = os.popen("wmic cpu get name").read()
+    cpu_info = f"CPU (Processor): {processor_info}\nCPU Frequency: {cpu_freq.current} MHz\nCPU Usage: {cpu_percent}% \nCPU Count (Logical Cores): {cpu_count}"
     info_label.config(text=cpu_info)
+    
 
 def get_memory_info(info_label):
     virtual_memory = psutil.virtual_memory()
@@ -267,6 +312,34 @@ def get_disk_info(info_label):
     )
     info_label.config(text=disk_info)
 
+# beterry
+
+
+def Sensors_Battery():
+    battery = psutil.sensors_battery()
+    
+    result = {
+        "Battery": (str(battery.percent) + "%, Charging: " + ("Yes" if battery.power_plugged else "No")) 
+                   if battery else "No Battery",
+        "Processes": len(psutil.pids()),
+        "Uptime": str(timedelta(seconds=int(datetime.now().timestamp() - psutil.boot_time())))
+    }
+
+    # Display results in a formatted string
+    result_str = ""
+    for key, value in result.items():
+        result_str += f"{key}: {value}\n"
+
+    return result_str
+
+
+
+def get_Battery_info(info_label):
+    """Update the info section with system details."""
+    info = Sensors_Battery ()
+    info_label.config(text=info)
+
+#shudown and restart
 def shutdown_gui():
     """Shutdown the computer with a confirmation dialog."""
     confirm = messagebox.askyesno("Shutdown Confirmation", "Are you sure you want to shut down the computer?")
@@ -290,32 +363,45 @@ def create_full_interface():
     root.title("Complete System Dashboard")
     root.geometry("1400x800")
 
+    # Sidebar frame
     sidebar = ttk.Frame(root, width=200, relief="raised", padding=10)
     sidebar.pack(side=tk.LEFT, fill=tk.Y)
-    
-    # Top buttons (Speed Test and Wi-Fi Credentials)
-    ttk.Button(sidebar, text="Wi-Fi Credentials", command=lambda: get_wifi_passwords(info_label)).pack(fill=tk.X, pady=5)
-    ttk.Button(sidebar, text="Wi-Fi Speed Test", command=lambda: check_wifi_speed(info_label)).pack(fill=tk.X, pady=5)
 
-    # Bottom buttons (System Info and others)
-    ttk.Button(sidebar, text="System Info", command=lambda: show_system_info(info_label)).pack(fill=tk.X, pady=5)
-    ttk.Button(sidebar, text="CPU Info", command=lambda: get_cpu_info(info_label)).pack(fill=tk.X, pady=5)
-    ttk.Button(sidebar, text="Memory Info", command=lambda: get_memory_info(info_label)).pack(fill=tk.X, pady=5)
-    ttk.Button(sidebar, text="Disk Info", command=lambda: get_disk_info(info_label)).pack(fill=tk.X, pady=5)
-    ttk.Button(sidebar, text="Cleanup", command=cleanup_temp_files).pack(fill=tk.X, pady=5)
+    # Top buttons (Wi-Fi features)
+    ttk.Button(sidebar, text="Wi-Fi Credentials", command=lambda: get_wifi_passwords(info_label)).pack(fill=tk.X, pady=10)
+    ttk.Button(sidebar, text="Wi-Fi Speed Test", command=lambda: check_wifi_speed(info_label)).pack(fill=tk.X, pady=10)
 
-    # Shutdown and Restart buttons
-    ttk.Button(sidebar, text="Shutdown", command=shutdown_gui).pack(fill=tk.X, pady=5)
-    ttk.Button(sidebar, text="Restart", command=restart_gui).pack(fill=tk.X, pady=5)
+    # System information buttons
+    ttk.Button(sidebar, text="System Info", command=lambda: show_system_info(info_label)).pack(fill=tk.X, pady=10)
+    ttk.Button(sidebar, text="CPU Info", command=lambda: get_cpu_info(info_label)).pack(fill=tk.X, pady=10)
+    ttk.Button(sidebar, text="Memory Info", command=lambda: get_memory_info(info_label)).pack(fill=tk.X, pady=10)
+    ttk.Button(sidebar, text="Disk Info", command=lambda: get_disk_info(info_label)).pack(fill=tk.X, pady=10)
+    ttk.Button(sidebar, text="Cleanup", command=clean_temp_files).pack(fill=tk.X, pady=10,)
+    ttk.Button(sidebar, text="Empty Recycle Bin", command=empty_recycle_bin).pack(fill=tk.X, pady=10)
+    ttk.Button(sidebar, text="Battery Info", command=lambda: get_Battery_info(info_label)).pack(fill=tk.X, pady=10)
 
+
+
+    # Bottom frame for Shutdown and Restart buttons
+    bottom_frame = ttk.Frame(sidebar)
+    bottom_frame.pack(side=tk.BOTTOM, fill=tk.X, pady=(20, 0))  # Add spacing from other buttons
+    style = ttk.Style()
+    style.configure("Green.TButton", foreground="black", background="green")
+    style.configure("Red.TButton", foreground="black", background="red")
+
+    # Buttons with styles
+    ttk.Button(bottom_frame, text="Shutdown", style="Red.TButton", command=shutdown_gui).pack(fill=tk.X, pady=10)
+    ttk.Button(bottom_frame, text="Restart", style="Green.TButton", command=restart_gui).pack(fill=tk.X, pady=10)
+
+    # Main content area
     main_frame = ttk.Frame(root, padding=10)
     main_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
-    # Move info_label to the bottom
+    # Info label at the bottom of the main frame
     info_label = tk.Label(main_frame, text="", justify="left", anchor="w", font=("Courier", 10), padx=10)
     info_label.pack(side=tk.BOTTOM, fill=tk.X, pady=10)
 
-    # Create the plot
+    # Create the performance plot
     fig, ax = plt.subplots(figsize=(7, 5))
     ax.set_title('System Performance (CPU, Memory, Disk)')
     ax.set_xlabel('Time (minutes)')
@@ -331,6 +417,7 @@ def create_full_interface():
     canvas.draw()
     canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
+    # Initialize performance data
     x_data, cpu_data, mem_data, disk_data = [], [], [], []
     start_time = psutil.time.time()  # Store the start time
     update_performance(cpu_line, mem_line, disk_line, x_data, cpu_data, mem_data, disk_data, canvas, start_time)
