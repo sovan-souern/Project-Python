@@ -18,7 +18,12 @@ import subprocess
 import openpyxl
 from openpyxl.styles import Alignment, PatternFill, Font
 from openpyxl import load_workbook
+<<<<<<< HEAD
 
+=======
+import winshell
+# Function to get the serial number
+>>>>>>> a0bd93c20b556ff7683b236fbdbdae865a90d4c3
 def get_serial_number():
     try:
         result = subprocess.check_output("wmic bios get serialnumber", shell=True).decode().strip().split("\n")
@@ -166,10 +171,40 @@ def fetch_system_info():
     ]
     return "\n".join(info)
 
+<<<<<<< HEAD
 def cleanup_temp_files():
     """Placeholder for cleaning up temporary files."""
     print("Cleanup functionality triggered!")
     messagebox.showinfo("Cleanup", "Temporary files cleaned successfully!")
+=======
+
+def cleanup_temp_files():
+    """Cleans up temporary files on the system."""
+    temp_path = os.environ.get('TEMP')  # Get the TEMP directory path
+    if temp_path and os.path.exists(temp_path):
+        for root, dirs, files in os.walk(temp_path):
+            for file in files:
+                try:
+                    os.remove(os.path.join(root, file))  # Delete files
+                except Exception as e:
+                    print(f"Error deleting {file}: {e}")
+        print("Temporary files cleaned!")
+        messagebox.showinfo("Cleanup", "Temporary files cleaned successfully!")
+    else:
+        print("TEMP directory not found!")
+        messagebox.showwarning("Cleanup", "TEMP directory not found!")
+
+# Define empty_recycle_bin function
+def empty_recycle_bin():
+    """Empties the Recycle Bin."""
+    try:
+        winshell.recycle_bin().empty(confirm=False, show_progress=False, sound=False)
+        print("Recycle Bin cleaned successfully!")
+        messagebox.showinfo("Cleanup", "Recycle Bin cleaned successfully!")
+    except Exception as e:
+        print(f"Error cleaning Recycle Bin: {e}")
+        messagebox.showerror("Error", f"Error cleaning Recycle Bin: {e}")
+>>>>>>> a0bd93c20b556ff7683b236fbdbdae865a90d4c3
 
 def show_system_info(info_label):
     """Update the info section with system details."""
@@ -371,12 +406,23 @@ def create_full_interface():
     ttk.Button(sidebar, text="Wi-Fi Credentials", command=lambda: get_wifi_passwords(info_label)).pack(fill=tk.X, pady=10)
     ttk.Button(sidebar, text="Wi-Fi Speed Test", command=lambda: check_wifi_speed(info_label)).pack(fill=tk.X, pady=10)
 
+<<<<<<< HEAD
     # Bottom buttons (System Info and others)
     ttk.Button(sidebar, text="System Info", command=lambda: show_system_info(info_label)).pack(fill=tk.X, pady=5)
     ttk.Button(sidebar, text="CPU Info", command=lambda: get_cpu_info(info_label)).pack(fill=tk.X, pady=5)
     ttk.Button(sidebar, text="Memory Info", command=lambda: get_memory_info(info_label)).pack(fill=tk.X, pady=5)
     ttk.Button(sidebar, text="Disk Info", command=lambda: get_disk_info(info_label)).pack(fill=tk.X, pady=5)
     ttk.Button(sidebar, text="Cleanup", command=cleanup_temp_files).pack(fill=tk.X, pady=5)
+=======
+    # System information buttons
+    ttk.Button(sidebar, text="System Info", command=lambda: show_system_info(info_label)).pack(fill=tk.X, pady=10)
+    ttk.Button(sidebar, text="CPU Info", command=lambda: get_cpu_info(info_label)).pack(fill=tk.X, pady=10)
+    ttk.Button(sidebar, text="Memory Info", command=lambda: get_memory_info(info_label)).pack(fill=tk.X, pady=10)
+    ttk.Button(sidebar, text="Disk Info", command=lambda: get_disk_info(info_label)).pack(fill=tk.X, pady=10)
+    ttk.Button(sidebar, text="Cleanup", command=cleanup_temp_files).pack(fill=tk.X, pady=10,)
+    ttk.Button(sidebar, text="Empty Recycle Bin", command=empty_recycle_bin).pack(fill=tk.X, pady=10)
+    ttk.Button(sidebar, text="Battery Info", command=lambda: get_Battery_info(info_label)).pack(fill=tk.X, pady=10)
+>>>>>>> a0bd93c20b556ff7683b236fbdbdae865a90d4c3
 
     # Shutdown and Restart buttons
     ttk.Button(sidebar, text="Shutdown", command=shutdown_gui).pack(fill=tk.X, pady=5)
