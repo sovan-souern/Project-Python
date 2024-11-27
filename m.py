@@ -173,7 +173,7 @@ def cleanup_temp_files():
 
 def show_system_info(info_label):
     """Update the info section with system details."""
-    info = get_system_info()
+    info = show_system_info()
     info_label.config(text=info)
 
 def update_task_list(tree):
