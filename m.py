@@ -15,8 +15,7 @@ import subprocess
 import openpyxl
 from openpyxl.styles import Alignment, PatternFill, Font
 from openpyxl import load_workbook
-
-
+import winshell
 # Function to get the serial number
 def get_serial_number():
     try:
@@ -167,41 +166,33 @@ def fetch_system_info():
                 ]
     return "\n".join(info)
 
-def clean_temp_files():
-    """Clean temporary files from system temp directories."""
-    # Get the temp directories
-    temp_dirs = [os.environ.get('TEMP'), os.environ.get('TMP')]
-    # Loop over temp directories and remove files
-    for temp_dir in temp_dirs:
-        if temp_dir and os.path.exists(temp_dir):
-            for filename in os.listdir(temp_dir):
-                file_path = os.path.join(temp_dir, filename)
+
+def cleanup_temp_files():
+    """Cleans up temporary files on the system."""
+    temp_path = os.environ.get('TEMP')  # Get the TEMP directory path
+    if temp_path and os.path.exists(temp_path):
+        for root, dirs, files in os.walk(temp_path):
+            for file in files:
                 try:
-                    if os.path.isfile(file_path):
-                        os.remove(file_path) 
-                    elif os.path.isdir(file_path):
-                        shutil.rmtree(file_path)  
+                    os.remove(os.path.join(root, file))  # Delete files
                 except Exception as e:
-                    print(f"Failed to remove {file_path}: {e}")
+                    print(f"Error deleting {file}: {e}")
+        print("Temporary files cleaned!")
+        messagebox.showinfo("Cleanup", "Temporary files cleaned successfully!")
+    else:
+        print("TEMP directory not found!")
+        messagebox.showwarning("Cleanup", "TEMP directory not found!")
 
+# Define empty_recycle_bin function
 def empty_recycle_bin():
-    """Clear the Recycle Bin using PowerShell command (Windows only)."""
+    """Empties the Recycle Bin."""
     try:
-        # Run the PowerShell command to empty the Recycle Bin
-        subprocess.run('PowerShell.exe -Command "Clear-RecycleBin -Force"', shell=True, check=True)
-        print("Recycle Bin cleaned.")
-    except subprocess.CalledProcessError as e:
-        print(f"Failed to clear Recycle Bin: {e}")
-
-def main():
-    """Main function to run cleaning tasks."""
-    print("Cleaning temporary files and Recycle Bin...")
-    clean_temp_files()
-    empty_recycle_bin()
-
-# Corrected the if condition to check for '__main__'
-if __name__ == "__main__":
-    main()
+        winshell.recycle_bin().empty(confirm=False, show_progress=False, sound=False)
+        print("Recycle Bin cleaned successfully!")
+        messagebox.showinfo("Cleanup", "Recycle Bin cleaned successfully!")
+    except Exception as e:
+        print(f"Error cleaning Recycle Bin: {e}")
+        messagebox.showerror("Error", f"Error cleaning Recycle Bin: {e}")
 
 def show_system_info(info_label):
     """Update the info section with system details."""
@@ -376,7 +367,7 @@ def create_full_interface():
     ttk.Button(sidebar, text="CPU Info", command=lambda: get_cpu_info(info_label)).pack(fill=tk.X, pady=10)
     ttk.Button(sidebar, text="Memory Info", command=lambda: get_memory_info(info_label)).pack(fill=tk.X, pady=10)
     ttk.Button(sidebar, text="Disk Info", command=lambda: get_disk_info(info_label)).pack(fill=tk.X, pady=10)
-    ttk.Button(sidebar, text="Cleanup", command=clean_temp_files).pack(fill=tk.X, pady=10,)
+    ttk.Button(sidebar, text="Cleanup", command=cleanup_temp_files).pack(fill=tk.X, pady=10,)
     ttk.Button(sidebar, text="Empty Recycle Bin", command=empty_recycle_bin).pack(fill=tk.X, pady=10)
     ttk.Button(sidebar, text="Battery Info", command=lambda: get_Battery_info(info_label)).pack(fill=tk.X, pady=10)
 
