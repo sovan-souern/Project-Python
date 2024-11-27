@@ -10,7 +10,6 @@ import os
 import tkinter.messagebox as messagebox
 import os
 import psutil
-import shutil
 import speedtest
 import subprocess
 import platform
@@ -19,7 +18,8 @@ import os
 import openpyxl
 from openpyxl.styles import Alignment, PatternFill, Font
 from openpyxl import load_workbook
-
+from datetime import timedelta, datetime
+import winshell
 def get_serial_number():
     try:
         result = subprocess.check_output("wmic bios get serialnumber", shell=True).decode().strip().split("\n")
@@ -81,6 +81,7 @@ data = {
     "Specification": specification_values,
 }
 
+# Check if the data already exists
 # Export to Excel
 def export_to_excel(data, filename="window.xlsx"):
     try:
@@ -103,6 +104,7 @@ def export_to_excel(data, filename="window.xlsx"):
                 "Asset Tag",
                 "System Remark",
             ]
+            
             header_fill = PatternFill(start_color="ADD8E6", end_color="ADD8E6", fill_type="solid")
             header_font = Font(bold=True)
 
@@ -112,6 +114,8 @@ def export_to_excel(data, filename="window.xlsx"):
                 cell.fill = header_fill
                 cell.font = header_font
                 cell.alignment = Alignment(horizontal="center")
+            
+
 
         # Find the next empty row
         next_row = sheet.max_row + 1
@@ -140,29 +144,71 @@ def export_to_excel(data, filename="window.xlsx"):
 # Save results to Excel
 export_to_excel(data)
 
-
-
-
-# Fetch system information
-def fetch_system_info():
-    """Fetch and display basic system information."""
-    info = [
-        f"OS: {platform.system()} {platform.release()}",
-        f"Architecture: {platform.architecture()[0]}",
-        f"Processor: {platform.processor()}",
-        f"RAM: {round(psutil.virtual_memory().total / (1024 ** 3), 2)} GB",
-        f"Disk: {round(psutil.disk_usage('/').total / (1024 ** 3), 2)} GB",
-    ]
-    return "\n".join(info)
+def get_system_info():
+    pc_name = socket.gethostname()
+    ip_address = socket.gethostbyname(pc_name)
+    os_version = platform.platform()
+    memory_info = psutil.virtual_memory()
+    username = os.getlogin()
+    remark = subprocess.check_output("wmic computersystem get description", shell=True).decode().strip().split("\n")[1]
+    return f"""
+PC Name         : {pc_name}
+IP Address      : {ip_address}
+OS Version      : {os_version}
+Total Memory    : {memory_info.total / (1024 ** 3):.2f} GB
+Available Memory: {memory_info.available / (1024 ** 3):.2f} GB
+Username        : {username} 
+System Remark   : {remark}
+    """
 
 def cleanup_temp_files():
-    """Placeholder for cleaning up temporary files."""
     print("Cleanup functionality triggered!")
     messagebox.showinfo("Cleanup", "Temporary files cleaned successfully!")
+    
+
+def empty_recycle_bin():
+    try:
+        import winshell
+        recycle_bin = winshell.recycle_bin()
+        if recycle_bin.items():
+            recycle_bin.empty(confirm=False, show_progress=False, sound=False)
+            return "Recycle Bin cleaned successfully."
+        else:
+            return "Recycle Bin is already empty."
+    except ImportError:
+        return "Winshell module not installed."
+
+def cleanup_temp_files():
+    """Cleans up temporary files on the system."""
+    temp_path = os.environ.get('TEMP')  # Get the TEMP directory path
+    if temp_path and os.path.exists(temp_path):
+        for root, dirs, files in os.walk(temp_path):
+            for file in files:
+                try:
+                    os.remove(os.path.join(root, file))  # Delete files
+                except Exception as e:
+                    print(f"Error deleting {file}: {e}")
+        print("Temporary files cleaned!")
+        messagebox.showinfo("Cleanup", "Temporary files cleaned successfully!")
+    else:
+        print("TEMP directory not found!")
+        messagebox.showwarning("Cleanup", "TEMP directory not found!")
+
+# Define empty_recycle_bin function
+def empty_recycle_bin():
+    """Empties the Recycle Bin."""
+    try:
+        winshell.recycle_bin().empty(confirm=False, show_progress=False, sound=False)
+        print("Recycle Bin cleaned successfully!")
+        messagebox.showinfo("Cleanup", "Recycle Bin cleaned successfully!")
+    except Exception as e:
+        print(f"Error cleaning Recycle Bin: {e}")
+        messagebox.showerror("Error", f"Error cleaning Recycle Bin: {e}")
+
 
 def show_system_info(info_label):
     """Update the info section with system details."""
-    info = fetch_system_info()
+    info = get_system_info()
     info_label.config(text=info)
 
 def update_task_list(tree):
@@ -216,6 +262,7 @@ def check_wifi_speed(info_label):
     result = f"Download Speed: {download_speed:.2f} Mbps\nUpload Speed: {upload_speed:.2f} Mbps\nPing: {ping} ms"
     info_label.config(text=result)
 
+
 def get_wifi_passwords(info_label):
     """Retrieve stored Wi-Fi passwords."""
     profiles_cmd = "netsh wlan show profiles"
@@ -240,6 +287,7 @@ def get_serial_number():
     except subprocess.CalledProcessError:
         return "Unable to retrieve serial number"
 
+
 def get_cpu_info(info_label):
     cpu_count = psutil.cpu_count(logical=True)
     cpu_freq = psutil.cpu_freq()
@@ -247,25 +295,54 @@ def get_cpu_info(info_label):
     cpu_info = f"CPU Count (Logical Cores): {cpu_count}\nCPU Frequency: {cpu_freq.current} MHz\nCPU Usage: {cpu_percent}%"
     info_label.config(text=cpu_info)
 
-def get_memory_info(info_label):
-    virtual_memory = psutil.virtual_memory()
-    memory_info = (
-        f"Total Memory (GB): {virtual_memory.total / (1024 ** 3):.2f}\n"
-        f"Used Memory (GB): {virtual_memory.used / (1024 ** 3):.2f}\n"
-        f"Available Memory (GB): {virtual_memory.available / (1024 ** 3):.2f}\n"
-        f"Memory Usage (%): {virtual_memory.percent}%"
-    )
-    info_label.config(text=memory_info)
-
-def get_disk_info(info_label):
+    
+    
+def get_memory():
+    memory_info= psutil.virtual_memory()
     disk_usage = psutil.disk_usage('/')
-    disk_info = (
-        f"Total Disk Space (GB): {disk_usage.total / (1024 ** 3):.2f}\n"
-        f"Used Disk Space (GB): {disk_usage.used / (1024 ** 3):.2f}\n"
-        f"Free Disk Space (GB): {disk_usage.free / (1024 ** 3):.2f}\n"
-        f"Disk Usage (%): {disk_usage.percent}%"
-    )
-    info_label.config(text=disk_info)
+    net_io = psutil.net_io_counters()
+    return f"""
+Memory Usage        : {memory_info.percent}%
+Total Memory        : {memory_info.total / (1024 ** 3):.2f} GB
+Available Memory    : {memory_info.available / (1024 ** 3):.2f} GB
+
+Disk Usage          : {disk_usage.percent}%
+Total Disk Space    : {disk_usage.total / (1024 ** 3):.2f} GB
+Used Disk Space     : {disk_usage.used / (1024 ** 3):.2f} GB
+Free Disk Space     : {disk_usage.free / (1024 ** 3):.2f} GB
+
+Total Bytes Sent    : {net_io.bytes_sent / (1024 ** 2):.2f} MB
+Total Bytes Received: {net_io.bytes_recv / (1024 ** 2):.2f} MB
+    """    
+def get_memory_info(info_label):
+    """Update the info section with system details."""
+    info = get_memory ()
+    info_label.config(text=info)
+
+
+
+def Sensors_Battery():
+    battery = psutil.sensors_battery()
+    result = {
+        "Battery   ": (str(battery.percent) + "%, Charging: " + ("Yes" if battery.power_plugged else "No"))
+                   if battery else "No Battery",
+        "Processes ": len(psutil.pids()),
+        "Uptime    ": str(timedelta(seconds=(datetime.now().timestamp() - psutil.boot_time())))
+    }
+
+    # Display results in a formatted string
+    result_str = ""
+    for key, value in result.items():
+        result_str += f"{key}: {value}\n"
+
+    return result_str
+
+
+def get_Battery_info(info_label):
+    """Update the info section with system details."""
+    info = Sensors_Battery ()
+    info_label.config(text=info)
+
 
 def shutdown_gui():
     """Shutdown the computer with a confirmation dialog."""
@@ -275,6 +352,7 @@ def shutdown_gui():
         messagebox.showinfo("Shutdown", "Shutting down...")
     else:
         messagebox.showinfo("Shutdown", "Shutdown canceled.")
+
 
 def restart_gui():
     """Restart the computer with a confirmation dialog."""
@@ -288,7 +366,7 @@ def restart_gui():
 def create_full_interface():
     root = tk.Tk()
     root.title("Complete System Dashboard")
-    root.geometry("1400x800")
+    root.geometry("1100x800")
 
     sidebar = ttk.Frame(root, width=200, relief="raised", padding=10)
     sidebar.pack(side=tk.LEFT, fill=tk.Y)
@@ -301,12 +379,13 @@ def create_full_interface():
     ttk.Button(sidebar, text="System Info", command=lambda: show_system_info(info_label)).pack(fill=tk.X, pady=5)
     ttk.Button(sidebar, text="CPU Info", command=lambda: get_cpu_info(info_label)).pack(fill=tk.X, pady=5)
     ttk.Button(sidebar, text="Memory Info", command=lambda: get_memory_info(info_label)).pack(fill=tk.X, pady=5)
-    ttk.Button(sidebar, text="Disk Info", command=lambda: get_disk_info(info_label)).pack(fill=tk.X, pady=5)
+    ttk.Button(sidebar, text="Battery Info", command=lambda: get_Battery_info(info_label)).pack(fill=tk.X, pady=5)
+    ttk.Button(sidebar, text="Empty Recycle Bin", command=empty_recycle_bin).pack(fill=tk.X, pady=5)
     ttk.Button(sidebar, text="Cleanup", command=cleanup_temp_files).pack(fill=tk.X, pady=5)
 
     # Shutdown and Restart buttons
-    ttk.Button(sidebar, text="Shutdown", command=shutdown_gui).pack(fill=tk.X, pady=5)
-    ttk.Button(sidebar, text="Restart", command=restart_gui).pack(fill=tk.X, pady=5)
+    ttk.Button(sidebar, text="Shutdown", command=shutdown_gui).pack(fill=tk.X, pady=45)
+    ttk.Button(sidebar, text="Restart", command=restart_gui).pack(fill=tk.X, pady=45)
 
     main_frame = ttk.Frame(root, padding=10)
     main_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
