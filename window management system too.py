@@ -33,7 +33,7 @@ def get_memory_info():
         "Memory Usage (%)": virtual_memory.percent
     }
 
-# Function to get disk info
+# Function to get disk info update
 def get_disk_info():
     disk_usage = psutil.disk_usage('/')
     return {
