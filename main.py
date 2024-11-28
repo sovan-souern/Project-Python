@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import speedtest
 import socket
 import os
-import shutil
 from datetime import datetime, timedelta
 import tkinter.messagebox as messagebox
 import speedtest
