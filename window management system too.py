@@ -27,10 +27,10 @@ def get_serial_number():
 def get_memory_info():
     virtual_memory = psutil.virtual_memory()
     return {
-        "Total Memory (GB)": virtual_memory.total / (1024 ** 3),
-        "Used Memory (GB)": virtual_memory.used / (1024 ** 3),
+        "Total Memory (GB)"    : virtual_memory.total / (1024 ** 3),
+        "Used Memory (GB)"     : virtual_memory.used / (1024 ** 3),
         "Available Memory (GB)": virtual_memory.available / (1024 ** 3),
-        "Memory Usage (%)": virtual_memory.percent
+        "Memory Usage (%)"     : virtual_memory.percent
     }
 
 # Function to get disk info update
@@ -38,9 +38,9 @@ def get_disk_info():
     disk_usage = psutil.disk_usage('/')
     return {
         "Total Disk Space (GB)": disk_usage.total / (1024 ** 3),
-        "Used Disk Space (GB)": disk_usage.used / (1024 ** 3),
-        "Free Disk Space (GB)": disk_usage.free / (1024 ** 3),
-        "Disk Usage (%)": disk_usage.percent
+        "Used Disk Space (GB)" : disk_usage.used / (1024 ** 3),
+        "Free Disk Space (GB)" : disk_usage.free / (1024 ** 3),
+        "Disk Usage (%)"       : disk_usage.percent
     }
 
 # Function to get the username
@@ -62,19 +62,19 @@ def get_system_remark():
 memory_info = get_memory_info()
 disk_info = get_disk_info()
 specification_values = (
-    f"Total Memory: {memory_info['Total Memory (GB)']:.2f} GB, "
-    f"Used Memory: {memory_info['Used Memory (GB)']:.2f} GB, "
+    f"Total Memory    : {memory_info['Total Memory (GB)']:.2f} GB, "
+    f"Used Memory     : {memory_info['Used Memory (GB)']:.2f} GB, "
     f"Total Disk Space: {disk_info['Total Disk Space (GB)']:.2f} GB"
 )
 
 data = {
-    "Username": get_username(),
-    "Serial Number": get_serial_number(),
-    "System Model": platform.uname().machine,
-    "System Manufacturer": platform.uname().system,
-    "Asset Tag": platform.uname().node,
-    "System Remark": get_system_remark(),
-    "Specification": specification_values,
+    "Username"        : get_username(),
+    "Serial Number"   : get_serial_number(),
+    "System Model"    : platform.uname().machine,
+    "Operating System": platform.uname().system,
+    "Asset Tag"       : platform.uname().node,
+    "System Remark"   : get_system_remark(),
+    "Specification"   : specification_values,
 }
 
 # Export to Excel
@@ -95,7 +95,7 @@ def export_to_excel(data, filename="window.xlsx"):
                 "Username",
                 "Serial Number",
                 "System Model",
-                "System Manufacturer",
+                "Operating System",
                 "Asset Tag",
                 "System Remark",
             ]
@@ -153,15 +153,15 @@ def fetch_system_info():
     username = os.getlogin()
     """Fetch and display basic system information."""
     info = [
-        f"OS: {platform.system()} {platform.release()}",
+        f"OS          : {platform.system()} {platform.release()}",
         f"Architecture: {platform.architecture()[0]}",
-        f"Processor: {platform.processor()}",
-        f"Divide name: {platform.node()}",
-        f"Version: {platform.version()}",
-        f"Release: {platform.release()}",  
-        f"System Model: {platform.machine()}",
-        f"IP Address: {ip_address}",
-        f"Username: {username}",
+        f"Processor   : {platform.processor()}",
+        f"Divide name : {platform.node()}",
+        f"Version     : {platform.version()}",
+        f"Release     : {platform.release()}",  
+        f"System Model: {platform.machine()}", 
+        f"IP Address  : {ip_address}",
+        f"Username    : {username}",
                 ]
     return "\n".join(info)
 
@@ -262,7 +262,7 @@ def get_wifi_passwords(info_label):
         for line in profile_info.splitlines():
             if "Key Content" in line:
                 password = line.split(":")[1].strip()
-                wifi_passwords += f"{profile}: {password}\n"
+                wifi_passwords += f"{profile}  : {password}\n"
                 break
     info_label.config(text=wifi_passwords)
 
@@ -277,28 +277,63 @@ def get_cpu_info(info_label):
     cpu_count = psutil.cpu_count(logical=True)
     cpu_freq = psutil.cpu_freq()
     cpu_percent = psutil.cpu_percent(interval=1)
-    processor_info = os.popen("wmic cpu get name").read()
-    cpu_info = f"CPU (Processor): {processor_info}\nCPU Frequency: {cpu_freq.current} MHz\nCPU Usage: {cpu_percent}% \nCPU Count (Logical Cores): {cpu_count}"
+    try:
+        processor_info = subprocess.check_output("wmic cpu get name", shell=True).decode().strip().split("\n")[1]
+    except Exception as e:
+        processor_info = "Error retrieving processor info: " + str(e)
+    
+    # Get basic OS details using platform module
+    os_name = platform.system()
+    windows_edition = "N/A"
+    
+    # Get Windows edition if the system is Windows
+    if os_name == "Windows":
+        try:
+            windows_edition = subprocess.check_output(
+                ['powershell', '-Command', "(Get-ItemProperty 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion').ProductName"],
+                shell=True,
+                text=True
+            ).strip()
+        except subprocess.CalledProcessError:
+            windows_edition = "Unable to fetch Windows edition"
+
+    # Compile all information
+    cpu_info = (
+        "CPU (Processor)   : {}\n"
+        "CPU Frequency     : {} MHz\n"
+        "CPU Usage         : {}%\n"
+        "CPU(Logical Cores): {}\n"
+        "Windows Edition   : {}".format(
+            processor_info,
+            cpu_freq.current if cpu_freq else "N/A",
+            cpu_percent,
+            cpu_count,
+            windows_edition
+        )
+    )
+
+    # Update the label text
     info_label.config(text=cpu_info)
+
     
 
 def get_memory_info(info_label):
     virtual_memory = psutil.virtual_memory()
     memory_info = (
-        f"Total Memory (GB): {virtual_memory.total / (1024 ** 3):.2f}\n"
-        f"Used Memory (GB): {virtual_memory.used / (1024 ** 3):.2f}\n"
-        f"Available Memory (GB): {virtual_memory.available / (1024 ** 3):.2f}\n"
-        f"Memory Usage (%): {virtual_memory.percent}%"
+        f"Total Memory     : {virtual_memory.total / (1024 ** 3):.2f}(GB)\n"
+        f"Used Memory      : {virtual_memory.used / (1024 ** 3):.2f}(GB)\n"
+        f"Available Memory : {virtual_memory.available / (1024 ** 3):.2f}(GB)\n"
+        f"Memory Usage     : {virtual_memory.percent}%"
     )
     info_label.config(text=memory_info)
 
 def get_disk_info(info_label):
     disk_usage = psutil.disk_usage('/')
     disk_info = (
-        f"Total Disk Space (GB): {disk_usage.total / (1024 ** 3):.2f}\n"
-        f"Used Disk Space (GB): {disk_usage.used / (1024 ** 3):.2f}\n"
-        f"Free Disk Space (GB): {disk_usage.free / (1024 ** 3):.2f}\n"
-        f"Disk Usage (%): {disk_usage.percent}%"
+        f"Total Disk Space : {disk_usage.total / (1024 ** 3):.2f}(GB)\n"
+        f"Used Disk Space  : {disk_usage.used / (1024 ** 3):.2f}(GB)\n"
+        f"Free Disk Space  : {disk_usage.free / (1024 ** 3):.2f}(GB)\n"
+        f"Disk Usage       : {disk_usage.percent}%"
     )
     info_label.config(text=disk_info)
 
@@ -309,10 +344,10 @@ def Sensors_Battery():
     battery = psutil.sensors_battery()
     
     result = {
-        "Battery": (str(battery.percent) + "%, Charging: " + ("Yes" if battery.power_plugged else "No")) 
+        "Battery"  : (str(battery.percent) + "%, Charging: " + ("Yes" if battery.power_plugged else "No")) 
                    if battery else "No Battery",
         "Processes": len(psutil.pids()),
-        "Uptime": str(timedelta(seconds=int(datetime.now().timestamp() - psutil.boot_time())))
+        "Uptime"   : str(timedelta(seconds=int(datetime.now().timestamp() - psutil.boot_time())))
     }
 
     # Display results in a formatted string
