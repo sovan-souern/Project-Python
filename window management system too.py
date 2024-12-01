@@ -43,7 +43,7 @@ def get_disk_info():
         "Free Disk Space (GB)" : disk_usage.free / (1024 ** 3),
         "Disk Usage (%)"       : disk_usage.percent
     }
-
+##================================================================
 # Function to get the username
 def get_username():
     try:
@@ -77,7 +77,7 @@ data = {
     "System Remark"   : get_system_remark(),
     "Specification"   : specification_values,
 }
-
+##================================================================
 # Export to Excel
 def export_to_excel(data, filename="window.xlsx"):
     try:
@@ -146,8 +146,8 @@ def export_to_excel(data, filename="window.xlsx"):
 export_to_excel(data)
 
 
-
-
+##================================================================
+# check system information
 def fetch_system_info():
     pc_name = socket.gethostname()
     ip_address = socket.gethostbyname(pc_name)
@@ -165,8 +165,8 @@ def fetch_system_info():
         f"Username    : {username}",
                 ]
     return "\n".join(info)
-
-
+##================================================================
+#clean file
 def cleanup_temp_files():
     """Cleans up temporary files on the system."""
     temp_path = os.environ.get('TEMP')  # Get the TEMP directory path
@@ -182,7 +182,7 @@ def cleanup_temp_files():
     else:
         print("TEMP directory not found!")
         messagebox.showwarning("Cleanup", "TEMP directory not found!")
-
+##================================================================
 # Define empty_recycle_bin function
 def empty_recycle_bin():
     """Empties the Recycle Bin."""
@@ -193,7 +193,8 @@ def empty_recycle_bin():
     except Exception as e:
         print(f"Error cleaning Recycle Bin: {e}")
         messagebox.showerror("Error", f"Error cleaning Recycle Bin: {e}")
-
+##================================================================
+#show sytem info
 def show_system_info(info_label):
     """Update the info section with system details."""
     info = fetch_system_info()
@@ -214,7 +215,8 @@ def update_task_list(tree):
             tree.insert("", "end", values=(proc.info['pid'], proc.info['name'], proc.info['cpu_percent'], round(memory_usage, 2), disk_usage))
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             continue
-
+#================================================================
+#update performance
 def update_performance(cpu_line, mem_line, disk_line, x_data, cpu_data, mem_data, disk_data, canvas, start_time):
     """Update performance metrics dynamically and convert time to minutes."""
     current_time = (psutil.time.time() - start_time) / 60  # Convert time to minutes
@@ -239,7 +241,8 @@ def update_performance(cpu_line, mem_line, disk_line, x_data, cpu_data, mem_data
     ax.set_xlabel('Time (minutes)')  # Changed to minutes
     canvas.draw()
     canvas.get_tk_widget().after(1000, update_performance, cpu_line, mem_line, disk_line, x_data, cpu_data, mem_data, disk_data, canvas, start_time)
-
+##================================================================
+# check wifi speed
 def check_wifi_speed(info_label):
     """Check the download and upload speed of the active Wi-Fi connection."""
     st = speedtest.Speedtest()
@@ -249,7 +252,8 @@ def check_wifi_speed(info_label):
     ping = st.results.ping
     result = f"Download Speed: {download_speed:.2f} Mbps\nUpload Speed: {upload_speed:.2f} Mbps\nPing: {ping} ms"
     info_label.config(text=result)
-
+##================================================================
+#get wifi password
 def get_wifi_passwords(info_label):
     """Retrieve stored Wi-Fi passwords."""
     profiles_cmd = "netsh wlan show profiles"
@@ -266,14 +270,16 @@ def get_wifi_passwords(info_label):
                 wifi_passwords += f"{profile}  : {password}\n"
                 break
     info_label.config(text=wifi_passwords)
-
+##================================================================
+##get serial number
 def get_serial_number():
     try:
         serial_number = subprocess.check_output("wmic bios get serialnumber").decode().strip().split('\n')[1]
         return serial_number
     except subprocess.CalledProcessError:
         return "Unable to retrieve serial number"
-
+##================================================================
+#Get cpu information
 def get_cpu_info(info_label):
     cpu_count = psutil.cpu_count(logical=True)
     cpu_freq = psutil.cpu_freq()
@@ -317,7 +323,8 @@ def get_cpu_info(info_label):
     info_label.config(text=cpu_info)
 
     
-
+##================================================================
+#get memory infomation
 def get_memory_info(info_label):
     virtual_memory = psutil.virtual_memory()
     memory_info = (
@@ -327,7 +334,8 @@ def get_memory_info(info_label):
         f"Memory Usage     : {virtual_memory.percent}%"
     )
     info_label.config(text=memory_info)
-
+##============================================================
+#get disk information
 def get_disk_info(info_label):
     disk_usage = psutil.disk_usage('/')
     disk_info = (
@@ -338,9 +346,8 @@ def get_disk_info(info_label):
     )
     info_label.config(text=disk_info)
 
-# beterry
-
-
+##================================================================
+#Get sensor battery information
 def Sensors_Battery():
     battery = psutil.sensors_battery()
     
@@ -359,12 +366,13 @@ def Sensors_Battery():
     return result_str
 
 
-
+##================================================================
+#get battery information
 def get_Battery_info(info_label):
     """Update the info section with system details."""
     info = Sensors_Battery ()
     info_label.config(text=info)
-
+##================================================================
 #shudown and restart
 def shutdown_gui():
     """Shutdown the computer with a confirmation dialog."""
@@ -374,7 +382,8 @@ def shutdown_gui():
         messagebox.showinfo("Shutdown", "Shutting down...")
     else:
         messagebox.showinfo("Shutdown", "Shutdown canceled.")
-
+##================================================================
+# restart computer
 def restart_gui():
     """Restart the computer with a confirmation dialog."""
     confirm = messagebox.askyesno("Restart Confirmation", "Are you sure you want to restart the computer?")
@@ -383,7 +392,8 @@ def restart_gui():
         messagebox.showinfo("Restart", "Restarting...")
     else:
         messagebox.showinfo("Restart", "Restart canceled.")
-
+##================================================================
+#create full interface
 def create_full_interface():
     root = tk.Tk()
     root.title("Complete System Dashboard")
@@ -442,7 +452,7 @@ def create_full_interface():
     canvas = FigureCanvasTkAgg(fig, master=main_frame)
     canvas.draw()
     canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-
+##================================================================
     # Initialize performance data
     x_data, cpu_data, mem_data, disk_data = [], [], [], []
     start_time = psutil.time.time()  # Store the start time
