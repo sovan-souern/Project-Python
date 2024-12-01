@@ -32,7 +32,6 @@ def get_memory_info():
         "Available Memory (GB)": virtual_memory.available / (1024 ** 3),
         "Memory Usage (%)": virtual_memory.percent
     }
-
 # Function to get disk info
 def get_disk_info():
     disk_usage = psutil.disk_usage('/')
@@ -57,7 +56,6 @@ def get_system_remark():
         return result[1].strip() if len(result) > 1 else "No Description Found"
     except Exception as e:
         return f"Error: {e}"
-
 # Gather all data
 memory_info = get_memory_info()
 disk_info = get_disk_info()
@@ -144,9 +142,7 @@ def export_to_excel(data, filename="window.xlsx"):
 # Save results to Excel
 export_to_excel(data)
 
-
-
-
+## get system information 
 def fetch_system_info():
     pc_name = socket.gethostname()
     ip_address = socket.gethostbyname(pc_name)
@@ -181,8 +177,7 @@ def cleanup_temp_files():
     else:
         print("TEMP directory not found!")
         messagebox.showwarning("Cleanup", "TEMP directory not found!")
-
-# Define empty_recycle_bin function
+## Define empty_recycle_bin function
 def empty_recycle_bin():
     """Empties the Recycle Bin."""
     try:
@@ -216,7 +211,7 @@ def update_task_list(tree):
 
 def update_performance(cpu_line, mem_line, disk_line, x_data, cpu_data, mem_data, disk_data, canvas, start_time):
     """Update performance metrics dynamically and convert time to minutes."""
-    current_time = (psutil.time.time() - start_time) / 60  # Convert time to minutes
+    current_time = (psutil.time.time() - start_time) / 120  # Convert time to minutes
     cpu_data.append(psutil.cpu_percent())
     mem_data.append(psutil.virtual_memory().percent)
     disk_data.append(psutil.disk_usage('/').percent)
@@ -248,7 +243,8 @@ def check_wifi_speed(info_label):
     ping = st.results.ping
     result = f"Download Speed: {download_speed:.2f} Mbps\nUpload Speed: {upload_speed:.2f} Mbps\nPing: {ping} ms"
     info_label.config(text=result)
-
+## =================================================================
+## get_system_remark
 def get_wifi_passwords(info_label):
     """Retrieve stored Wi-Fi passwords."""
     profiles_cmd = "netsh wlan show profiles"
@@ -265,14 +261,16 @@ def get_wifi_passwords(info_label):
                 wifi_passwords += f"{profile}: {password}\n"
                 break
     info_label.config(text=wifi_passwords)
-
+##=====================================================================
+## get serial number
 def get_serial_number():
     try:
         serial_number = subprocess.check_output("wmic bios get serialnumber").decode().strip().split('\n')[1]
         return serial_number
     except subprocess.CalledProcessError:
         return "Unable to retrieve serial number"
-
+##=====================================================================
+## get cpu info
 def get_cpu_info(info_label):
     cpu_count = psutil.cpu_count(logical=True)
     cpu_freq = psutil.cpu_freq()
@@ -280,8 +278,8 @@ def get_cpu_info(info_label):
     processor_info = os.popen("wmic cpu get name").read()
     cpu_info = f"CPU (Processor): {processor_info}\nCPU Frequency: {cpu_freq.current} MHz\nCPU Usage: {cpu_percent}% \nCPU Count (Logical Cores): {cpu_count}"
     info_label.config(text=cpu_info)
-    
-
+##=====================================================================
+## get memory infor
 def get_memory_info(info_label):
     virtual_memory = psutil.virtual_memory()
     memory_info = (
@@ -291,7 +289,8 @@ def get_memory_info(info_label):
         f"Memory Usage (%): {virtual_memory.percent}%"
     )
     info_label.config(text=memory_info)
-
+##====================================================================
+## get disk infor
 def get_disk_info(info_label):
     disk_usage = psutil.disk_usage('/')
     disk_info = (
@@ -301,10 +300,8 @@ def get_disk_info(info_label):
         f"Disk Usage (%): {disk_usage.percent}%"
     )
     info_label.config(text=disk_info)
-
-# beterry
-
-
+    
+    
 def Sensors_Battery():
     battery = psutil.sensors_battery()
     
@@ -370,8 +367,7 @@ def create_full_interface():
     ttk.Button(sidebar, text="Empty Recycle Bin", command=empty_recycle_bin).pack(fill=tk.X, pady=10)
     ttk.Button(sidebar, text="Battery Info", command=lambda: get_Battery_info(info_label)).pack(fill=tk.X, pady=10)
 
-
-
+##====================================================
     # Bottom frame for Shutdown and Restart buttons
     bottom_frame = ttk.Frame(sidebar)
     bottom_frame.pack(side=tk.BOTTOM, fill=tk.X, pady=(20, 0))  # Add spacing from other buttons
