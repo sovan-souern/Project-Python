@@ -15,7 +15,6 @@ import openpyxl
 from openpyxl.styles import Alignment, PatternFill, Font
 from openpyxl import load_workbook
 import winshell
-##================================================================
 # Function to get the serial number
 def get_serial_number():
     try:
@@ -33,12 +32,8 @@ def get_memory_info():
         "Available Memory (GB)": virtual_memory.available / (1024 ** 3),
         "Memory Usage (%)"     : virtual_memory.percent
     }
-<<<<<<<< HEAD:window managerment system tool.py
-# Function to get disk info
-========
 
 # Function to get disk info update
->>>>>>>> cb47d75661fb0e0bbf9925a2baa4c8983ce81416:window management system too.py
 def get_disk_info():
     disk_usage = psutil.disk_usage('/')
     return {
@@ -47,7 +42,7 @@ def get_disk_info():
         "Free Disk Space (GB)" : disk_usage.free / (1024 ** 3),
         "Disk Usage (%)"       : disk_usage.percent
     }
-##================================================================
+
 # Function to get the username
 def get_username():
     try:
@@ -62,6 +57,7 @@ def get_system_remark():
         return result[1].strip() if len(result) > 1 else "No Description Found"
     except Exception as e:
         return f"Error: {e}"
+
 # Gather all data
 memory_info = get_memory_info()
 disk_info = get_disk_info()
@@ -80,7 +76,7 @@ data = {
     "System Remark"   : get_system_remark(),
     "Specification"   : specification_values,
 }
-##================================================================
+
 # Export to Excel
 def export_to_excel(data, filename="window.xlsx"):
     try:
@@ -148,14 +144,9 @@ def export_to_excel(data, filename="window.xlsx"):
 # Save results to Excel
 export_to_excel(data)
 
-<<<<<<<< HEAD:window managerment system tool.py
-## get system information 
-========
 
-##================================================================
-# check system information
 
->>>>>>>> cb47d75661fb0e0bbf9925a2baa4c8983ce81416:window management system too.py
+
 def fetch_system_info():
     pc_name = socket.gethostname()
     ip_address = socket.gethostbyname(pc_name)
@@ -173,8 +164,7 @@ def fetch_system_info():
         f"Username    : {username}",
                 ]
     return "\n".join(info)
-##================================================================
-#clean file
+
 
 def cleanup_temp_files():
     """Cleans up temporary files on the system."""
@@ -191,12 +181,8 @@ def cleanup_temp_files():
     else:
         print("TEMP directory not found!")
         messagebox.showwarning("Cleanup", "TEMP directory not found!")
-<<<<<<<< HEAD:window managerment system tool.py
-## Define empty_recycle_bin function
-========
-##================================================================
+
 # Define empty_recycle_bin function
->>>>>>>> cb47d75661fb0e0bbf9925a2baa4c8983ce81416:window management system too.py
 def empty_recycle_bin():
     """Empties the Recycle Bin."""
     try:
@@ -206,8 +192,7 @@ def empty_recycle_bin():
     except Exception as e:
         print(f"Error cleaning Recycle Bin: {e}")
         messagebox.showerror("Error", f"Error cleaning Recycle Bin: {e}")
-##================================================================
-#show sytem infor
+
 def show_system_info(info_label):
     """Update the info section with system details."""
     info = fetch_system_info()
@@ -228,11 +213,10 @@ def update_task_list(tree):
             tree.insert("", "end", values=(proc.info['pid'], proc.info['name'], proc.info['cpu_percent'], round(memory_usage, 2), disk_usage))
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             continue
-#================================================================
-#update performance
+
 def update_performance(cpu_line, mem_line, disk_line, x_data, cpu_data, mem_data, disk_data, canvas, start_time):
     """Update performance metrics dynamically and convert time to minutes."""
-    current_time = (psutil.time.time() - start_time) / 120  # Convert time to minutes
+    current_time = (psutil.time.time() - start_time) / 60  # Convert time to minutes
     cpu_data.append(psutil.cpu_percent())
     mem_data.append(psutil.virtual_memory().percent)
     disk_data.append(psutil.disk_usage('/').percent)
@@ -254,8 +238,7 @@ def update_performance(cpu_line, mem_line, disk_line, x_data, cpu_data, mem_data
     ax.set_xlabel('Time (minutes)')  # Changed to minutes
     canvas.draw()
     canvas.get_tk_widget().after(1000, update_performance, cpu_line, mem_line, disk_line, x_data, cpu_data, mem_data, disk_data, canvas, start_time)
-##================================================================
-# check wifi speed
+
 def check_wifi_speed(info_label):
     """Check the download and upload speed of the active Wi-Fi connection."""
     st = speedtest.Speedtest()
@@ -265,13 +248,7 @@ def check_wifi_speed(info_label):
     ping = st.results.ping
     result = f"Download Speed: {download_speed:.2f} Mbps\nUpload Speed: {upload_speed:.2f} Mbps\nPing: {ping} ms"
     info_label.config(text=result)
-<<<<<<<< HEAD:window managerment system tool.py
-## =================================================================
-## get_system_remark
-========
-##================================================================
-#get wifi password
->>>>>>>> cb47d75661fb0e0bbf9925a2baa4c8983ce81416:window management system too.py
+
 def get_wifi_passwords(info_label):
     """Retrieve stored Wi-Fi passwords."""
     profiles_cmd = "netsh wlan show profiles"
@@ -288,37 +265,18 @@ def get_wifi_passwords(info_label):
                 wifi_passwords += f"{profile}  : {password}\n"
                 break
     info_label.config(text=wifi_passwords)
-<<<<<<<< HEAD:window managerment system tool.py
-##=====================================================================
-## get serial number
-========
-##================================================================
-##get serial number
->>>>>>>> cb47d75661fb0e0bbf9925a2baa4c8983ce81416:window management system too.py
+
 def get_serial_number():
     try:
         serial_number = subprocess.check_output("wmic bios get serialnumber").decode().strip().split('\n')[1]
         return serial_number
     except subprocess.CalledProcessError:
         return "Unable to retrieve serial number"
-<<<<<<<< HEAD:window managerment system tool.py
-##=====================================================================
-## get cpu info
-========
-##================================================================
-#Get cpu information
->>>>>>>> cb47d75661fb0e0bbf9925a2baa4c8983ce81416:window management system too.py
+
 def get_cpu_info(info_label):
     cpu_count = psutil.cpu_count(logical=True)
     cpu_freq = psutil.cpu_freq()
     cpu_percent = psutil.cpu_percent(interval=1)
-<<<<<<<< HEAD:window managerment system tool.py
-    processor_info = os.popen("wmic cpu get name").read()
-    cpu_info = f"CPU (Processor): {processor_info}\nCPU Frequency: {cpu_freq.current} MHz\nCPU Usage: {cpu_percent}% \nCPU Count (Logical Cores): {cpu_count}"
-    info_label.config(text=cpu_info)
-##=====================================================================
-## get memory infor
-========
     try:
         processor_info = subprocess.check_output("wmic cpu get name", shell=True).decode().strip().split("\n")[1]
     except Exception as e:
@@ -327,7 +285,7 @@ def get_cpu_info(info_label):
     # Get basic OS details using platform module
     os_name = platform.system()
     windows_edition = "N/A"
-
+    
     # Get Windows edition if the system is Windows
     if os_name == "Windows":
         try:
@@ -357,9 +315,8 @@ def get_cpu_info(info_label):
     # Update the label text
     info_label.config(text=cpu_info)
 
-##================================================================
-#get memory infomation
->>>>>>>> cb47d75661fb0e0bbf9925a2baa4c8983ce81416:window management system too.py
+    
+
 def get_memory_info(info_label):
     virtual_memory = psutil.virtual_memory()
     memory_info = (
@@ -369,13 +326,7 @@ def get_memory_info(info_label):
         f"Memory Usage     : {virtual_memory.percent}%"
     )
     info_label.config(text=memory_info)
-<<<<<<<< HEAD:window managerment system tool.py
-##====================================================================
-## get disk infor
-========
-##============================================================
-#get disk information
->>>>>>>> cb47d75661fb0e0bbf9925a2baa4c8983ce81416:window management system too.py
+
 def get_disk_info(info_label):
     disk_usage = psutil.disk_usage('/')
     disk_info = (
@@ -385,14 +336,10 @@ def get_disk_info(info_label):
         f"Disk Usage       : {disk_usage.percent}%"
     )
     info_label.config(text=disk_info)
-<<<<<<<< HEAD:window managerment system tool.py
-    
-    
-========
 
-##================================================================
-#Get sensor battery information
->>>>>>>> cb47d75661fb0e0bbf9925a2baa4c8983ce81416:window management system too.py
+# beterry
+
+
 def Sensors_Battery():
     battery = psutil.sensors_battery()
     
@@ -402,19 +349,21 @@ def Sensors_Battery():
         "Processes": len(psutil.pids()),
         "Uptime"   : str(timedelta(seconds=int(datetime.now().timestamp() - psutil.boot_time())))
     }
+
     # Display results in a formatted string
     result_str = ""
     for key, value in result.items():
         result_str += f"{key}: {value}\n"
 
     return result_str
-##================================================================
-#get battery information
+
+
+
 def get_Battery_info(info_label):
     """Update the info section with system details."""
     info = Sensors_Battery ()
     info_label.config(text=info)
-##================================================================
+
 #shudown and restart
 def shutdown_gui():
     """Shutdown the computer with a confirmation dialog."""
@@ -424,8 +373,7 @@ def shutdown_gui():
         messagebox.showinfo("Shutdown", "Shutting down...")
     else:
         messagebox.showinfo("Shutdown", "Shutdown canceled.")
-##================================================================
-# restart computer
+
 def restart_gui():
     """Restart the computer with a confirmation dialog."""
     confirm = messagebox.askyesno("Restart Confirmation", "Are you sure you want to restart the computer?")
@@ -434,8 +382,7 @@ def restart_gui():
         messagebox.showinfo("Restart", "Restarting...")
     else:
         messagebox.showinfo("Restart", "Restart canceled.")
-##================================================================
-#create full interface
+
 def create_full_interface():
     root = tk.Tk()
     root.title("Complete System Dashboard")
@@ -458,7 +405,8 @@ def create_full_interface():
     ttk.Button(sidebar, text="Empty Recycle Bin", command=empty_recycle_bin).pack(fill=tk.X, pady=10)
     ttk.Button(sidebar, text="Battery Info", command=lambda: get_Battery_info(info_label)).pack(fill=tk.X, pady=10)
 
-##====================================================
+
+
     # Bottom frame for Shutdown and Restart buttons
     bottom_frame = ttk.Frame(sidebar)
     bottom_frame.pack(side=tk.BOTTOM, fill=tk.X, pady=(20, 0))  # Add spacing from other buttons
@@ -493,7 +441,7 @@ def create_full_interface():
     canvas = FigureCanvasTkAgg(fig, master=main_frame)
     canvas.draw()
     canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-##================================================================
+
     # Initialize performance data
     x_data, cpu_data, mem_data, disk_data = [], [], [], []
     start_time = psutil.time.time()  # Store the start time
